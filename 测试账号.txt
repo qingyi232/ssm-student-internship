@@ -1,0 +1,23 @@
+学生实习管理系统 - 测试账号
+================================
+
+管理员账号：
+  用户名：admin
+  密码：admin123
+
+教师账号：
+  用户名：teacher01
+  密码：teacher123
+
+  用户名：teacher02
+  密码：teacher123
+
+学生账号：
+  用户名：student01
+  密码：student123
+
+  用户名：student02
+  密码：student123
+
+  用户名：student03
+  密码：student123

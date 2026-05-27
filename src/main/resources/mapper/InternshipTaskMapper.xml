@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.internship.mapper.InternshipTaskMapper">
+
+    <resultMap id="BaseResultMap" type="InternshipTask">
+        <id column="id" property="id"/>
+        <result column="internship_id" property="internshipId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="deadline" property="deadline"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT id, internship_id, title, content, deadline, status, create_time, update_time
+        FROM internship_task
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByInternshipId" resultMap="BaseResultMap">
+        SELECT id, internship_id, title, content, deadline, status, create_time, update_time
+        FROM internship_task
+        WHERE internship_id = #{internshipId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO internship_task (internship_id, title, content, deadline, status, create_time, update_time)
+        VALUES (#{internshipId}, #{title}, #{content}, #{deadline}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE internship_task
+        <set>
+            <if test="internshipId != null">internship_id = #{internshipId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="deadline != null">deadline = #{deadline},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM internship_task WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM internship_task
+    </select>
+
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.internship.mapper.InternshipLogMapper">
+
+    <resultMap id="BaseResultMap" type="InternshipLog">
+        <id column="id" property="id"/>
+        <result column="internship_id" property="internshipId"/>
+        <result column="student_id" property="studentId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="log_date" property="logDate"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT id, internship_id, student_id, title, content, log_date, create_time
+        FROM internship_log
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByInternshipId" resultMap="BaseResultMap">
+        SELECT id, internship_id, student_id, title, content, log_date, create_time
+        FROM internship_log
+        WHERE internship_id = #{internshipId}
+        ORDER BY log_date DESC
+    </select>
+
+    <select id="findByStudentId" resultMap="BaseResultMap">
+        SELECT id, internship_id, student_id, title, content, log_date, create_time
+        FROM internship_log
+        WHERE student_id = #{studentId}
+        ORDER BY log_date DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO internship_log (internship_id, student_id, title, content, log_date, create_time)
+        VALUES (#{internshipId}, #{studentId}, #{title}, #{content}, #{logDate}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE internship_log
+        <set>
+            <if test="internshipId != null">internship_id = #{internshipId},</if>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="logDate != null">log_date = #{logDate},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM internship_log WHERE id = #{id}
+    </delete>
+
+</mapper>

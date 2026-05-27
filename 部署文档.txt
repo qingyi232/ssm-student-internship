@@ -1,0 +1,735 @@
+================================================================================
+  基于SSM框架的学生实习管理系统 — 完整部署文档
+
+================================================================================
+
+目录
+----
+  一、环境要求总览
+  二、第一步：安装 JDK 1.8
+  三、第二步：安装 IntelliJ IDEA
+  四、第三步：安装 MySQL 8.0
+  五、第四步：导入数据库
+  六、第五步：IDEA 导入项目
+  七、第六步：配置项目 JDK
+  八、第七步：修改数据库连接配置
+  九、第八步：配置 Tomcat 并运行
+  十、第九步：访问系统并登录
+  十一、常见问题排查（FAQ）
+  附录A：测试账号汇总
+
+
+================================================================================
+一、环境要求总览
+================================================================================
+
+  ┌──────────────────┬────────────────────────────────────────────┐
+  │ 软件             │ 版本要求                                   │
+  ├──────────────────┼────────────────────────────────────────────┤
+  │ 操作系统         │ Windows 10 / 11                            │
+  │ JDK              │ JDK 1.8（即 Java 8），必须是 1.8           │
+  │ IntelliJ IDEA    │ 2021 及以上版本（推荐 Ultimate 旗舰版）    │
+  │ MySQL            │ 5.7 或 8.0（推荐 8.0）                     │
+  │ Tomcat           │ 8.5 或 9.0（IDEA 中配置，无需单独安装也行）│
+  └──────────────────┴────────────────────────────────────────────┘
+
+  【重要提示】
+  - JDK 版本必须是 1.8，不要用 JDK 11/17/21，否则存在兼容性问题。
+  - IDEA Ultimate 版（旗舰版）自带 Tomcat 集成支持，推荐使用。
+  - IDEA Community 版（社区版）需要安装 Smart Tomcat 插件。
+  - 如果你已经安装了某些软件，可以跳过对应的安装步骤。
+
+
+================================================================================
+二、第一步：安装 JDK 1.8
+================================================================================
+
+【下载地址】
+  官方下载（需要 Oracle 账号）：
+    https://www.oracle.com/java/technologies/javase/javase8u211-later-archive-downloads.html
+
+  免注册下载（推荐）：
+    https://adoptium.net/temurin/releases/?version=8
+    选择 Windows x64 → .msi 安装包
+
+【安装步骤】
+
+  1. 双击下载好的安装包（如 jdk-8u371-windows-x64.exe）
+  2. 一路点"下一步"即可，建议安装到默认路径：
+     C:\Program Files\Java\jdk1.8.0_371
+  3. 记住这个安装路径，后面配置 IDEA 时要用。
+
+【配置环境变量】
+
+  1. 右键"此电脑"（或"我的电脑"）→"属性"
+  2. 左侧点击"高级系统设置"→ 弹出窗口中点"环境变量"
+  3. 在下方"系统变量"区域，点"新建"，添加：
+
+       变量名：JAVA_HOME
+       变量值：C:\Program Files\Java\jdk1.8.0_371
+       （根据你的实际安装路径填写）
+
+  4. 在"系统变量"中找到名为 Path 的变量，双击打开，点"新建"，添加：
+
+       %JAVA_HOME%\bin
+
+  5. 依次点"确定"关闭所有窗口。
+
+【验证安装成功】
+
+  1. 按 Win+R 打开"运行"，输入 cmd，按回车打开命令提示符。
+  2. 输入以下命令并回车：
+
+       java -version
+
+  3. 如果看到类似如下输出，说明安装成功：
+
+       java version "1.8.0_371"
+       Java(TM) SE Runtime Environment (build 1.8.0_371-b11)
+       Java HotSpot(TM) 64-Bit Server VM (build 25.371-b11, mixed mode)
+
+  如果提示"不是内部或外部命令"，说明环境变量没有配置正确，请回去检查。
+
+
+================================================================================
+三、第二步：安装 IntelliJ IDEA
+================================================================================
+
+【下载地址】
+  官方：https://www.jetbrains.com/idea/download/
+
+  选择版本：
+    - Ultimate（旗舰版）：功能完整，自带 Tomcat 集成、数据库工具等（收费，有30天试用）
+    - Community（社区版）：免费，需要安装插件来支持 Tomcat
+
+  推荐下载 Ultimate 版（旗舰版），用于 Java Web 项目开发体验最好。
+
+【安装步骤】
+
+  1. 双击下载好的安装包（如 ideaIU-2024.1.exe）
+  2. 选择安装路径（建议保持默认或选一个没有中文的路径）
+  3. 在"Installation Options"页面中，勾选以下选项：
+     ✓ Create Desktop Shortcut（创建桌面快捷方式）- 64-bit
+     ✓ Add "Open Folder as Project" to context menu（可选，右键菜单打开项目）
+     ✓ .java（关联 .java 文件）
+  4. 点 Install，等待安装完成
+  5. 安装完成后，启动 IDEA
+
+  首次启动 IDEA 时：
+  - 接受用户协议
+  - 选择 UI 主题（深色/浅色，看个人喜好）
+  - 如果是 Ultimate 版，会提示激活或试用，选择"Start trial"开始30天试用即可
+
+【如果使用 Community 版，需安装 Smart Tomcat 插件】
+
+  1. 打开 IDEA → File → Settings（快捷键 Ctrl+Alt+S）
+  2. 左侧选择 Plugins
+  3. 在搜索框中输入"Smart Tomcat"
+  4. 找到 Smart Tomcat 插件，点击 Install 安装
+  5. 安装完成后点 Restart IDE 重启 IDEA
+
+
+================================================================================
+四、第三步：安装 MySQL 8.0
+================================================================================
+
+【下载地址】
+  官方下载：https://dev.mysql.com/downloads/installer/
+  选择 "mysql-installer-community-8.0.xx.msi"（约 300MB 的完整版）
+
+  如果下载页面要求登录，可以点页面底部 "No thanks, just start my download" 跳过。
+
+【安装步骤】
+
+  1. 双击安装包 mysql-installer-community-8.0.xx.msi
+
+  2. 安装类型选择 "Developer Default" 或 "Server only"：
+     - Developer Default：安装 MySQL Server + Workbench（图形化管理工具）+ 其他
+     - Server only：只安装 MySQL Server（更精简）
+     推荐选择 "Developer Default"，这样同时安装了 Workbench 可视化工具。
+
+  3. 一路点 "Next" / "Execute"，等待组件安装完成。
+
+  4. 到 "Type and Networking" 步骤时：
+     - Config Type 保持默认 "Development Computer"
+     - Port 保持默认 3306
+     - 勾选 "Open Windows Firewall ports"
+
+  5. 到 "Authentication Method" 步骤时：
+     - 选择 "Use Legacy Authentication Method"（兼容性更好）
+     - 或者保持默认也行
+
+  6. 到 "Accounts and Roles" 步骤时：
+     *** 非常重要 ***
+     设置 root 密码为：root
+     （本项目默认配置的数据库密码就是 root）
+     （如果你想设置其他密码也可以，后面第七步修改配置文件即可）
+
+  7. 到 "Windows Service" 步骤时：
+     - 勾选 "Configure MySQL Server as a Windows Service"
+     - 勾选 "Start the MySQL Server at System Startup"（开机自启）
+     - Service Name 保持默认 "MySQL80"
+
+  8. 点 "Execute" 应用配置，然后 "Finish" 完成安装。
+
+【验证 MySQL 安装成功】
+
+  方法一：使用 MySQL Workbench（如果安装了的话）
+  1. 打开 MySQL Workbench
+  2. 点击 "Local instance MySQL80" 连接
+  3. 输入 root 密码
+  4. 能看到查询界面就说明安装成功
+
+  方法二：使用命令行
+  1. 按 Win+R 输入 cmd 打开命令提示符
+  2. 输入：mysql -u root -p
+  3. 输入密码（如 root），能进入 mysql> 提示符说明安装成功
+  4. 输入 exit 退出
+
+  如果命令行提示"不是内部或外部命令"，需要将 MySQL 的 bin 目录加到 Path 环境变量：
+  默认路径为：C:\Program Files\MySQL\MySQL Server 8.0\bin
+
+
+================================================================================
+五、第四步：导入数据库
+================================================================================
+
+  项目根目录下有一个 SQL 脚本文件：
+
+    sql/internship_db.sql
+
+  这个脚本会自动创建数据库 internship_db，包含所有表结构和测试数据。
+  每次执行都会先删除旧库再重建，所以可以反复导入。
+
+【方法一：使用 MySQL Workbench 导入（推荐小白使用）】
+
+  1. 打开 MySQL Workbench，连接到本地 MySQL（输入 root 密码）
+  2. 菜单栏点击 File → Open SQL Script...
+  3. 选择项目目录下的 sql/internship_db.sql 文件，点"打开"
+  4. 脚本内容会显示在编辑器中
+  5. 点击工具栏的闪电图标 ⚡（Execute）执行全部脚本
+  6. 等待执行完成，底部 Output 栏显示一系列绿色对勾即成功
+  7. 左侧 SCHEMAS 栏刷新后，会出现 internship_db 数据库
+
+【方法二：使用 IDEA 内置数据库工具导入（推荐）】
+
+  如果你使用的是 IDEA Ultimate 版，可以直接在 IDEA 中操作数据库：
+
+  1. 打开 IDEA
+  2. 右侧边栏找到 "Database" 面板（如果没有，菜单 View → Tool Windows → Database）
+  3. 点击 "+" → Data Source → MySQL
+  4. 填写连接信息：
+     - Host: localhost
+     - Port: 3306
+     - User: root
+     - Password: root（你设置的密码）
+  5. 点 "Test Connection" 测试连接。
+     如果提示需要下载驱动，点击 "Download" 自动下载即可。
+     看到 "Successful" 说明连接成功。
+  6. 点 "OK" 保存连接。
+  7. 在 Database 面板中，右键你的连接 → "Run SQL Script..."
+  8. 选择 sql/internship_db.sql 文件
+  9. 点 "Run" 执行
+  10. 执行完成后，刷新连接，展开可以看到 internship_db 数据库及其所有表
+
+【方法三：使用命令行导入】
+
+  1. 打开命令提示符（Win+R → cmd）
+  2. 执行：
+
+     mysql -u root -p < "你的项目路径\sql\internship_db.sql"
+
+     例如：
+     mysql -u root -p < "F:\26毕设2\基于SSM框架的学生实习管理系统的设计与实现\sql\internship_db.sql"
+
+  3. 输入密码后等待执行完成
+
+【方法四：使用 Navicat 导入】
+
+  1. 打开 Navicat，新建 MySQL 连接：
+     主机: localhost  端口: 3306  用户名: root  密码: root
+  2. 连接成功后，右键连接名 → "运行 SQL 文件"
+  3. 选择 sql/internship_db.sql 文件
+  4. 点击"开始"执行
+
+【验证数据库导入成功】
+
+  无论用哪种方式导入，完成后请验证：
+
+  执行以下 SQL 查询（在任何工具中）：
+
+    USE internship_db;
+    SHOW TABLES;
+
+  应该看到以下 9 张表：
+    announcement         系统公告表
+    company              实习单位表
+    internship           实习记录表
+    internship_log       实习日志表
+    internship_report    实习报告表
+    internship_task      实习任务表
+    student              学生信息表
+    sys_user             系统用户表
+    teacher              教师信息表
+
+  再执行：
+    SELECT COUNT(*) FROM sys_user;
+
+  应该返回 11（1个管理员 + 2个教师 + 8个学生）。
+
+
+================================================================================
+六、第五步：IDEA 导入项目
+================================================================================
+
+【步骤一：打开项目】
+
+  1. 启动 IntelliJ IDEA
+  2. 选择 File → Open（如果是欢迎界面，直接点 Open）
+  3. 在文件选择器中，导航到项目根目录，即包含 pom.xml 的文件夹：
+     例如：F:\26毕设2\基于SSM框架的学生实习管理系统的设计与实现
+  4. 选中这个文件夹，点 "OK"
+  5. 如果弹出 "Trust Project" 对话框，选择 "Trust Project"
+  6. IDEA 会自动识别这是一个 Maven 项目
+
+【步骤二：等待 Maven 下载依赖】
+
+  导入项目后，IDEA 会自动开始下载 Maven 依赖。
+
+  你可以在 IDEA 右下角看到进度条，显示正在下载依赖。
+
+  *** 这一步可能需要 5-15 分钟（取决于网速），请耐心等待！ ***
+
+  如何判断依赖下载完成：
+  - 右下角进度条消失
+  - 右侧 Maven 面板中的依赖树能正常展开
+  - 代码中没有大面积红色错误下划线
+
+  【如果下载很慢或者失败？配置 Maven 阿里云镜像加速】
+
+  1. 找到你电脑上 Maven 的 settings.xml 文件。
+
+     IDEA 自带了 Maven，其配置文件位于：
+     C:\Users\你的用户名\.m2\settings.xml
+
+     如果这个文件不存在，手动创建一个。
+
+  2. 用记事本打开 settings.xml，替换为以下内容（或在已有文件中添加 mirror 部分）：
+
+     <?xml version="1.0" encoding="UTF-8"?>
+     <settings xmlns="http://maven.apache.org/settings/1.0.0"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xsi:schemaLocation="http://maven.apache.org/settings/1.0.0
+               http://maven.apache.org/xsd/settings-1.0.0.xsd">
+       <mirrors>
+         <mirror>
+           <id>aliyun</id>
+           <mirrorOf>central</mirrorOf>
+           <name>阿里云Maven镜像</name>
+           <url>https://maven.aliyun.com/repository/central</url>
+         </mirror>
+       </mirrors>
+     </settings>
+
+  3. 保存文件。
+
+  4. 回到 IDEA，点击右侧 Maven 面板中的刷新按钮（🔄），或者
+     右键 pom.xml → Maven → Reload Project
+     重新下载依赖，速度会快很多。
+
+  【如果依赖还是下载失败？】
+
+  1. 删除本地仓库中的坏文件：
+     删除 C:\Users\你的用户名\.m2\repository 文件夹
+  2. 回到 IDEA，重新 Reload Maven Project
+  3. 等待重新下载所有依赖
+
+
+================================================================================
+七、第六步：配置项目 JDK
+================================================================================
+
+  1. 在 IDEA 中，点击菜单 File → Project Structure
+     （快捷键：Ctrl + Alt + Shift + S）
+
+  2. 左侧选择 "Project"：
+     - Project SDK：选择 1.8（如果下拉列表中没有，见下方添加方法）
+     - Project language level：选择 "8 - Lambdas, type annotations, etc."
+     - 点 "Apply"
+
+  3. 左侧选择 "Modules"：
+     - 选中你的项目模块
+     - 确认 Language level 为 8
+     - 点 "Apply"
+
+  4. 点 "OK" 关闭窗口
+
+  【如果 SDK 列表中没有 JDK 1.8，如何添加？】
+
+  1. 在 Project Structure 窗口左侧，点击 "SDKs"
+  2. 点上方的 "+" 按钮 → "JDK"
+  3. 在文件选择器中，导航到你的 JDK 1.8 安装路径，例如：
+     C:\Program Files\Java\jdk1.8.0_371
+  4. 选中该目录，点 "OK"
+  5. IDEA 会自动检测到 JDK 版本，点 "Apply" → "OK"
+  6. 然后回到 Project 设置，就能选择 1.8 了
+
+
+================================================================================
+八、第七步：修改数据库连接配置
+================================================================================
+
+  在 IDEA 左侧项目目录中，找到并打开以下文件：
+
+    src/main/resources/db.properties
+
+  你会看到以下内容：
+
+    jdbc.driver=com.mysql.cj.jdbc.Driver
+    jdbc.url=jdbc:mysql://localhost:3306/internship_db?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8&allowPublicKeyRetrieval=true
+    jdbc.username=root
+    jdbc.password=root
+    jdbc.initialSize=5
+    jdbc.maxActive=20
+    jdbc.minIdle=5
+    jdbc.maxWait=60000
+
+  【需要修改的地方（根据你的实际情况）】
+
+  1. jdbc.password=root
+     → 如果你的 MySQL root 密码不是 root，改为你的实际密码。
+     例如密码是 123456，则改为：jdbc.password=123456
+
+  2. jdbc.url 中的 3306
+     → 如果你的 MySQL 端口不是 3306，修改为你的端口号。
+
+  3. jdbc.username=root
+     → 如果你使用其他 MySQL 用户名，修改为对应的用户名。
+
+  如果你的 MySQL 密码就是 root、端口就是 3306，则无需修改任何内容。
+
+  修改后按 Ctrl+S 保存文件。
+
+
+================================================================================
+九、第八步：配置 Tomcat 并运行
+================================================================================
+
+  *** 这是最关键的一步！请仔细按步骤操作。 ***
+
+===========================================================
+方式A：IDEA Ultimate 版 — 使用内置 Tomcat 支持（推荐）
+===========================================================
+
+  【第一步：下载 Tomcat（如果还没有的话）】
+
+  1. 打开浏览器，访问：https://tomcat.apache.org/download-90.cgi
+  2. 在 "9.0.xx" 下方找到 "Binary Distributions" → "Core"
+  3. 下载 "64-bit Windows zip"（如 apache-tomcat-9.0.85-windows-x64.zip）
+  4. 将 zip 文件解压到一个没有中文、没有空格的路径下，例如：
+     D:\apache-tomcat-9.0.85
+  5. 记住这个路径，下面要用。
+
+  注意：只需要下载解压即可，不需要启动 Tomcat，不需要配置环境变量。
+        IDEA 会自动管理 Tomcat 的启动和停止。
+
+  【第二步：在 IDEA 中配置 Tomcat】
+
+  1. 点击 IDEA 右上角的运行配置区域：
+     - 如果显示 "Add Configuration..."，点击它
+     - 如果显示其他内容，点击下拉箭头 → "Edit Configurations..."
+
+  2. 在弹出的 "Run/Debug Configurations" 窗口中：
+     点击左上角的 "+" 按钮 → 向下滚动找到 "Tomcat Server" → 选择 "Local"
+
+     （如果找不到 "Tomcat Server"，说明你可能用的是 Community 版，请看方式B）
+
+  3. 配置 Tomcat 基本信息：
+
+     Name 栏输入：Tomcat 9（自定义名称，方便识别）
+
+     在 "Application server" 右边，点击 "Configure..."
+     → 在弹出的窗口中，点击 "+"
+     → "Tomcat Home" 选择你的 Tomcat 解压路径，例如：D:\apache-tomcat-9.0.85
+     → IDEA 会自动识别 Tomcat 版本
+     → 点 "OK" 确认
+
+  4. 切换到 "Deployment" 选项卡（在 Server 选项卡旁边）：
+
+     点击下方的 "+" 按钮 → "Artifact..."
+     → 选择 "student-internship-system:war exploded"
+     → 点 "OK"
+
+     *** 极其重要 ***
+     在下方 "Application context" 输入框中，设置为：
+
+       /internship-system
+
+     这决定了你访问系统的 URL 路径。
+     如果设为 /，则访问地址为 http://localhost:8080/
+     如果设为 /internship-system，则访问地址为 http://localhost:8080/internship-system/
+
+  5. 切换回 "Server" 选项卡，检查以下设置：
+     - HTTP port: 8080（默认即可，如果 8080 被占用可以改成 8888 等）
+     - On 'Update' action: 选择 "Update classes and resources"
+     - On frame deactivation: 选择 "Update classes and resources"
+       （这样修改代码后不用重启 Tomcat 就能看到效果）
+
+  6. 点 "OK" 保存配置。
+
+  【第三步：启动项目】
+
+  1. IDEA 右上角的运行配置现在应该显示 "Tomcat 9"
+  2. 点击右边的绿色三角形按钮 ▶（Run）启动项目
+     或使用快捷键 Shift + F10
+
+  3. IDEA 会自动执行以下操作：
+     - 编译 Java 源代码
+     - 构建 WAR 包
+     - 启动 Tomcat 服务器
+     - 部署应用
+     - 自动打开浏览器访问系统
+
+  4. 在 IDEA 下方的 "Run" 面板中，你可以看到 Tomcat 的启动日志。
+     当看到类似以下内容时，说明启动成功：
+
+       INFO: Server startup in [xxxx] milliseconds
+
+  5. 浏览器会自动打开系统页面。
+     如果没有自动打开，手动在浏览器地址栏输入：
+
+       http://localhost:8080/internship-system/
+
+  【第四步：停止项目】
+
+  点击 IDEA 右上角的红色方块按钮 ■（Stop）即可停止 Tomcat。
+  或使用快捷键 Ctrl + F2。
+
+  【第五步：调试模式运行（可选）】
+
+  点击右上角的绿色虫子按钮 🐛（Debug）以调试模式启动。
+  可以设置断点，逐步调试代码。快捷键 Shift + F9。
+
+
+===========================================================
+方式B：IDEA Community 版 — 使用 Smart Tomcat 插件
+===========================================================
+
+  前提：已在第二步中安装了 Smart Tomcat 插件。
+  同样需要先下载 Tomcat（见方式A的第一步）。
+
+  1. 点击 IDEA 右上角 "Add Configuration..." 或 "Edit Configurations..."
+  2. 点击 "+" → 找到 "Smart Tomcat" → 选择它
+  3. 配置：
+     - Name: Smart Tomcat（自定义名称）
+     - Tomcat Server: 点 "Configure" 选择 Tomcat 解压路径
+       例如：D:\apache-tomcat-9.0.85
+     - Deployment Directory: 选择项目中的 src/main/webapp 目录
+     - Context Path: /internship-system
+     - Server Port: 8080
+  4. 点 "OK" 保存
+  5. 点击绿色三角形 ▶ 启动项目
+  6. 浏览器访问 http://localhost:8080/internship-system/
+
+
+===========================================================
+方式C：使用 Maven 命令行编译后手动部署到 Tomcat（备选）
+===========================================================
+
+  如果上述方式都有问题，可以使用最传统的方式：
+
+  1. 在 IDEA 下方打开 Terminal（终端）面板
+  2. 输入以下命令编译打包：
+
+     mvn clean package -DskipTests
+
+  3. 等待编译完成（看到 BUILD SUCCESS）
+  4. 生成的文件在：target/internship-system.war
+  5. 将这个 war 文件复制到 Tomcat 的 webapps 目录下
+  6. 双击 Tomcat 的 bin/startup.bat 启动 Tomcat
+  7. 浏览器访问 http://localhost:8080/internship-system/
+
+
+================================================================================
+十、第九步：访问系统并登录
+================================================================================
+
+  启动成功后，打开浏览器（推荐 Chrome / Edge），访问：
+
+    http://localhost:8080/internship-system/
+
+  你会看到学生实习管理系统的登录页面，左侧是系统品牌介绍，右侧是登录表单。
+
+  【测试账号 — 请使用以下账号登录测试】
+
+  ┌──────────┬──────────────┬──────────────┬───────────────────┐
+  │ 角色     │ 用户名       │ 密码         │ 姓名              │
+  ├──────────┼──────────────┼──────────────┼───────────────────┤
+  │ 管理员   │ admin        │ admin123     │ 系统管理员        │
+  ├──────────┼──────────────┼──────────────┼───────────────────┤
+  │ 教师     │ teacher01    │ teacher123   │ 王春水            │
+  │ 教师     │ teacher02    │ teacher123   │ 李明华            │
+  ├──────────┼──────────────┼──────────────┼───────────────────┤
+  │ 学生     │ student01    │ student123   │ 陈思梦            │
+  │ 学生     │ student02    │ student123   │ 张伟              │
+  │ 学生     │ student03    │ student123   │ 刘芳              │
+  │ 学生     │ student04    │ student123   │ 赵强              │
+  │ 学生     │ student05    │ student123   │ 孙丽              │
+  │ 学生     │ student06    │ student123   │ 周杰              │
+  │ 学生     │ student07    │ student123   │ 吴敏              │
+  │ 学生     │ student08    │ student123   │ 郑浩              │
+  └──────────┴──────────────┴──────────────┴───────────────────┘
+
+  登录后会根据角色自动跳转到对应的首页：
+    管理员 → 管理后台（学生/教师/企业/实习管理、公告、统计等）
+    教师   → 教师工作台（指导学生、布置任务、审核报告等）
+    学生   → 学生工作台（查看实习、提交报告/日志、查看公告等）
+
+  【建议的测试顺序】
+  1. 先用 admin / admin123 登录管理员后台，浏览各功能模块
+  2. 再用 teacher01 / teacher123 登录教师端，查看指导的学生和报告
+  3. 最后用 student01 / student123 登录学生端，查看实习、任务、提交报告
+
+
+================================================================================
+十一、常见问题排查（FAQ）
+================================================================================
+
+------------------------------------------------------------------------
+Q1：IDEA 中代码全是红色错误，很多类找不到？
+------------------------------------------------------------------------
+A1：Maven 依赖没有下载完成。解决方法：
+  1. 右键 pom.xml → Maven → Reload Project
+  2. 等待依赖全部下载完成（观察右下角进度条）
+  3. 如果反复失败，配置阿里云镜像后重试（见第五步中的说明）
+  4. 终极方法：删除 C:\Users\你的用户名\.m2\repository 文件夹，重新 Reload
+
+------------------------------------------------------------------------
+Q2：启动 Tomcat 时报错 "Address already in use: bind"？
+------------------------------------------------------------------------
+A2：8080 端口被其他程序占用了。解决方法：
+  方法一：找到并关闭占用 8080 端口的程序
+    在 cmd 中执行：netstat -ano | findstr 8080
+    找到对应的 PID，在任务管理器中结束该进程
+  方法二：修改端口
+    在 IDEA 的 Tomcat 配置中，将 HTTP port 从 8080 改为 8888 等
+    然后访问 http://localhost:8888/internship-system/
+
+------------------------------------------------------------------------
+Q3：启动成功但页面显示 404 Not Found？
+------------------------------------------------------------------------
+A3：检查以下几点：
+  1. URL 是否正确：http://localhost:8080/internship-system/
+     注意末尾要有斜杠 /
+  2. 检查 Tomcat 配置的 Application context 是否为 /internship-system
+  3. 检查 Deployment 选项卡中是否添加了 Artifact
+  4. 查看 IDEA Run 面板中的日志是否有错误信息
+
+------------------------------------------------------------------------
+Q4：页面能打开但登录后报错/白屏？
+------------------------------------------------------------------------
+A4：通常是数据库连接问题。检查：
+  1. MySQL 服务是否正在运行
+     在 cmd 中输入：net start mysql80
+     （如果已经启动会提示"服务已经启动"）
+  2. db.properties 中的用户名、密码是否正确
+  3. internship_db 数据库是否已成功创建（见第四步验证方法）
+  4. 查看 IDEA 控制台中是否有数据库连接相关的错误日志
+
+------------------------------------------------------------------------
+Q5：登录时提示"用户名或密码错误"？
+------------------------------------------------------------------------
+A5：
+  1. 确认用户名和密码输入正确（注意大小写和英文输入法）
+  2. 确认数据库已成功导入（用 SELECT COUNT(*) FROM sys_user 验证）
+  3. 确认 db.properties 中数据库连接配置正确
+  4. 如果数据被清空了，重新执行 sql/internship_db.sql 脚本
+
+------------------------------------------------------------------------
+Q6：页面样式错乱/没有 CSS 效果？
+------------------------------------------------------------------------
+A6：静态资源没有正确加载。
+  1. 按 F12 打开浏览器开发者工具 → Console 面板，查看是否有 404 错误
+  2. 检查 URL 中的上下文路径是否与配置一致
+  3. 确认 src/main/webapp/static/ 目录下有 css/style.css 和 js/common.js 文件
+
+------------------------------------------------------------------------
+Q7：IDEA 找不到 "Tomcat Server" 选项（只有 Community 版的选项）？
+------------------------------------------------------------------------
+A7：你使用的是 IDEA Community 版，不支持内置 Tomcat。
+  请按照"方式B"使用 Smart Tomcat 插件来运行项目。
+
+------------------------------------------------------------------------
+Q8：Maven 编译报错 "程序包 javax.servlet 不存在"？
+------------------------------------------------------------------------
+A8：这通常是 IDEA 没有正确识别 provided 依赖。解决方法：
+  1. File → Project Structure → Modules → Dependencies
+  2. 确认 javax.servlet-api 和 javax.servlet.jsp-api 出现在依赖列表中
+  3. 如果没有，右键 pom.xml → Maven → Reload Project
+
+------------------------------------------------------------------------
+Q9：如何重置所有测试数据？
+------------------------------------------------------------------------
+A9：重新执行 sql/internship_db.sql 脚本即可。
+  脚本开头会自动删除旧数据库并重新创建。
+  所有数据恢复到初始状态。
+
+------------------------------------------------------------------------
+Q10：修改了代码后如何生效？
+------------------------------------------------------------------------
+A10：
+  - 修改 Java 代码后：IDEA 通常会自动编译。如果没有生效，按 Ctrl+Shift+F9 重新编译。
+    如果改动较大，建议停止后重新启动 Tomcat。
+  - 修改 JSP 页面后：直接刷新浏览器即可看到效果（无需重启）。
+  - 修改配置文件后：需要重启 Tomcat 才能生效。
+
+------------------------------------------------------------------------
+Q11：如何在 IDEA 中查看数据库数据？
+------------------------------------------------------------------------
+A11：（IDEA Ultimate 版）
+  1. 右侧边栏 → Database 面板
+  2. 展开 internship_db → tables
+  3. 双击任意表名，即可查看和编辑表中的数据
+  4. 也可以在 Console 中直接写 SQL 查询
+
+------------------------------------------------------------------------
+Q12：项目运行后如何停止？
+------------------------------------------------------------------------
+A12：
+  方法一：点击 IDEA 右上角的红色方块 ■ 停止按钮
+  方法二：快捷键 Ctrl + F2
+  方法三：在 Run 面板中点击停止按钮
+
+------------------------------------------------------------------------
+Q13：新增的用户默认密码是什么？
+------------------------------------------------------------------------
+A13：通过管理员后台新增学生或教师时，系统自动创建的登录账号默认密码为：123456
+
+
+================================================================================
+附录A：测试账号汇总
+================================================================================
+
+  管理员：admin / admin123
+  教师1：teacher01 / teacher123（王春水）
+  教师2：teacher02 / teacher123（李明华）
+  学生1：student01 / student123（陈思梦）
+  学生2：student02 / student123（张伟）
+  学生3：student03 / student123（刘芳）
+  学生4：student04 / student123（赵强）
+  学生5：student05 / student123（孙丽）
+  学生6：student06 / student123（周杰）
+  学生7：student07 / student123（吴敏）
+  学生8：student08 / student123（郑浩）
+
+  新增用户的默认密码：123456
+
+  项目技术栈：
+    Spring 5.3.18 + Spring MVC + MyBatis 3.5.9 + MySQL 8.0
+    JDK 1.8 + Tomcat 9.0 + Maven
+    JSP + jQuery + Chart.js + Font Awesome
+
+
+================================================================================
+  文档结束 —
+================================================================================

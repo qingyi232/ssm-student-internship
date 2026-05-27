@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.internship.mapper.InternshipReportMapper">
+
+    <resultMap id="BaseResultMap" type="InternshipReport">
+        <id column="id" property="id"/>
+        <result column="internship_id" property="internshipId"/>
+        <result column="student_id" property="studentId"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="file_path" property="filePath"/>
+        <result column="status" property="status"/>
+        <result column="feedback" property="feedback"/>
+        <result column="score" property="score"/>
+        <result column="submit_time" property="submitTime"/>
+        <result column="review_time" property="reviewTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="student_name" property="studentName"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        r.id, r.internship_id, r.student_id, r.title, r.content, r.file_path, r.status,
+        r.feedback, r.score, r.submit_time, r.review_time, r.create_time,
+        s.name as student_name
+    </sql>
+
+    <sql id="Report_Join">
+        FROM internship_report r
+        LEFT JOIN student s ON r.student_id = s.id
+    </sql>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Report_Join"/>
+        WHERE r.id = #{id}
+    </select>
+
+    <select id="findByInternshipId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Report_Join"/>
+        WHERE r.internship_id = #{internshipId}
+    </select>
+
+    <select id="findByStudentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Report_Join"/>
+        WHERE r.student_id = #{studentId}
+    </select>
+
+    <select id="findByCondition" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Report_Join"/>
+        <where>
+            <if test="studentName != null and studentName != ''">
+                AND s.name LIKE <![CDATA[ CONCAT('%', #{studentName}, '%') ]]>
+            </if>
+            <if test="status != null">
+                AND r.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO internship_report (internship_id, student_id, title, content, file_path, status, feedback, score, submit_time, review_time, create_time)
+        VALUES (#{internshipId}, #{studentId}, #{title}, #{content}, #{filePath}, #{status}, #{feedback}, #{score}, #{submitTime}, #{reviewTime}, #{createTime})
+    </insert>
+
+    <update id="update">
+        UPDATE internship_report
+        <set>
+            <if test="internshipId != null">internship_id = #{internshipId},</if>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="filePath != null">file_path = #{filePath},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="feedback != null">feedback = #{feedback},</if>
+            <if test="score != null">score = #{score},</if>
+            <if test="submitTime != null">submit_time = #{submitTime},</if>
+            <if test="reviewTime != null">review_time = #{reviewTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM internship_report WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM internship_report
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM internship_report WHERE status = #{status}
+    </select>
+
+</mapper>

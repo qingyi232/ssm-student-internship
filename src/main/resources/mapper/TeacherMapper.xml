@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.internship.mapper.TeacherMapper">
+
+    <resultMap id="BaseResultMap" type="Teacher">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="teacher_no" property="teacherNo"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="title" property="title"/>
+        <result column="college" property="college"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT id, user_id, teacher_no, name, gender, title, college, phone, email, create_time, update_time
+        FROM teacher
+        WHERE id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="BaseResultMap">
+        SELECT id, user_id, teacher_no, name, gender, title, college, phone, email, create_time, update_time
+        FROM teacher
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="findByTeacherNo" resultMap="BaseResultMap">
+        SELECT id, user_id, teacher_no, name, gender, title, college, phone, email, create_time, update_time
+        FROM teacher
+        WHERE teacher_no = #{teacherNo}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT id, user_id, teacher_no, name, gender, title, college, phone, email, create_time, update_time
+        FROM teacher
+    </select>
+
+    <select id="findByCondition" resultMap="BaseResultMap">
+        SELECT id, user_id, teacher_no, name, gender, title, college, phone, email, create_time, update_time
+        FROM teacher
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE <![CDATA[ CONCAT('%', #{name}, '%') ]]>
+            </if>
+            <if test="teacherNo != null and teacherNo != ''">
+                AND teacher_no LIKE <![CDATA[ CONCAT('%', #{teacherNo}, '%') ]]>
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO teacher (user_id, teacher_no, name, gender, title, college, phone, email, create_time, update_time)
+        VALUES (#{userId}, #{teacherNo}, #{name}, #{gender}, #{title}, #{college}, #{phone}, #{email}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE teacher
+        <set>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="teacherNo != null">teacher_no = #{teacherNo},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="title != null">title = #{title},</if>
+            <if test="college != null">college = #{college},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM teacher WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM teacher
+    </select>
+
+</mapper>

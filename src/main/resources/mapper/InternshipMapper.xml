@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.internship.mapper.InternshipMapper">
+
+    <resultMap id="BaseResultMap" type="Internship">
+        <id column="id" property="id"/>
+        <result column="student_id" property="studentId"/>
+        <result column="company_id" property="companyId"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="position" property="position"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="student_name" property="studentName"/>
+        <result column="company_name" property="companyName"/>
+        <result column="teacher_name" property="teacherName"/>
+        <result column="student_no" property="studentNo"/>
+        <result column="gender" property="gender"/>
+        <result column="class_name" property="className"/>
+        <result column="major" property="major"/>
+        <result column="student_phone" property="phone"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        i.id, i.student_id, i.company_id, i.teacher_id, i.position, i.start_date, i.end_date,
+        i.status, i.remark, i.create_time, i.update_time,
+        s.name as student_name, c.name as company_name, t.name as teacher_name,
+        s.student_no, s.gender, s.class_name, s.major, s.phone as student_phone
+    </sql>
+
+    <sql id="Internship_Join">
+        FROM internship i
+        LEFT JOIN student s ON i.student_id = s.id
+        LEFT JOIN company c ON i.company_id = c.id
+        LEFT JOIN teacher t ON i.teacher_id = t.id
+    </sql>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Internship_Join"/>
+        WHERE i.id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Internship_Join"/>
+    </select>
+
+    <select id="findByStudentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Internship_Join"/>
+        WHERE i.student_id = #{studentId}
+    </select>
+
+    <select id="findByTeacherId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Internship_Join"/>
+        WHERE i.teacher_id = #{teacherId}
+    </select>
+
+    <select id="findByCondition" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        <include refid="Internship_Join"/>
+        <where>
+            <if test="studentName != null and studentName != ''">
+                AND s.name LIKE <![CDATA[ CONCAT('%', #{studentName}, '%') ]]>
+            </if>
+            <if test="companyName != null and companyName != ''">
+                AND c.name LIKE <![CDATA[ CONCAT('%', #{companyName}, '%') ]]>
+            </if>
+            <if test="status != null">
+                AND i.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO internship (student_id, company_id, teacher_id, position, start_date, end_date, status, remark, create_time, update_time)
+        VALUES (#{studentId}, #{companyId}, #{teacherId}, #{position}, #{startDate}, #{endDate}, #{status}, #{remark}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE internship
+        <set>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="companyId != null">company_id = #{companyId},</if>
+            <if test="teacherId != null">teacher_id = #{teacherId},</if>
+            <if test="position != null">position = #{position},</if>
+            <if test="startDate != null">start_date = #{startDate},</if>
+            <if test="endDate != null">end_date = #{endDate},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM internship WHERE id = #{id}
+    </delete>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM internship
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM internship WHERE status = #{status}
+    </select>
+
+</mapper>

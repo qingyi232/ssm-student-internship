@@ -1,0 +1,356 @@
+第五章 系统实现
+
+5.1 用户登录模块核心代码
+
+// LoginController.java - 登录验证与角色分发
+@PostMapping("/doLogin")
+public String doLogin(@RequestParam String username,
+                      @RequestParam String password,
+                      HttpSession session, Model model) {
+    User user = userService.login(username, password);
+    if (user == null) {
+        model.addAttribute("error", "用户名或密码错误");
+        return "login";
+    }
+    session.setAttribute("loginUser", user);
+    switch (user.getRole()) {
+        case 1: return "redirect:/admin/index";
+        case 2: return "redirect:/teacher/index";
+        case 3: return "redirect:/student/index";
+    }
+}
+
+// UserServiceImpl.java - 密码MD5加密校验
+@Override
+public User login(String username, String password) {
+    User user = userMapper.findByUsername(username);
+    if (user == null || (user.getStatus() != null && user.getStatus() == 0))
+        return null;
+    String encrypted = MD5Util.encrypt(password);
+    return encrypted.equals(user.getPassword()) ? user : null;
+}
+
+
+5.2 登录拦截器核心代码
+
+// LoginInterceptor.java - Session校验与AJAX适配
+@Override
+public boolean preHandle(HttpServletRequest request,
+        HttpServletResponse response, Object handler) throws Exception {
+    HttpSession session = request.getSession();
+    if (session != null && session.getAttribute("loginUser") != null)
+        return true;
+    boolean isAjax = "XMLHttpRequest"
+            .equalsIgnoreCase(request.getHeader("X-Requested-With"));
+    if (isAjax) {
+        response.setContentType("application/json;charset=UTF-8");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        Result result = Result.error("未登录或登录已过期");
+        response.getWriter().write(new ObjectMapper().writeValueAsString(result));
+        return false;
+    }
+    response.sendRedirect(request.getContextPath() + "/login");
+    return false;
+}
+
+
+5.3 学生管理模块核心代码
+
+// AdminController.java - 新增学生（含账号创建）
+@PostMapping("/student/save")
+public String studentSave(@ModelAttribute Student student,
+        @RequestParam String username, @RequestParam String realName) {
+    if (student.getId() == null) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword("123456");
+        user.setRole(3);
+        user.setStatus(1);
+        userService.addUser(user);
+        student.setUserId(user.getId());
+        studentService.addStudent(student);
+    } else {
+        studentService.updateStudent(student);
+    }
+    return "redirect:/admin/students";
+}
+
+// StudentServiceImpl.java - 分页条件查询
+@Override
+public PageInfo<Student> findByCondition(String name, String studentNo,
+        String major, int pageNum, int pageSize) {
+    PageHelper.startPage(pageNum, pageSize);
+    List<Student> list = studentMapper.findByCondition(name, studentNo, major);
+    return new PageInfo<>(list);
+}
+
+
+5.4 教师管理模块核心代码
+
+// AdminController.java - 新增教师（含账号创建）
+@PostMapping("/teacher/save")
+public String teacherSave(@ModelAttribute Teacher teacher,
+        @RequestParam String username, @RequestParam String realName) {
+    if (teacher.getId() == null) {
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword("123456");
+        user.setRole(2);
+        user.setStatus(1);
+        userService.addUser(user);
+        teacher.setUserId(user.getId());
+        teacherService.addTeacher(teacher);
+    } else {
+        teacherService.updateTeacher(teacher);
+    }
+    return "redirect:/admin/teachers";
+}
+
+
+5.5 企业管理模块核心代码
+
+// AdminController.java - 企业信息保存
+@PostMapping("/company/save")
+public String companySave(@ModelAttribute Company company) {
+    if (company.getId() == null) {
+        company.setCreateTime(new Date());
+        companyService.addCompany(company);
+    } else {
+        company.setUpdateTime(new Date());
+        companyService.updateCompany(company);
+    }
+    return "redirect:/admin/companies";
+}
+
+// CompanyMapper.xml - 条件查询
+<select id="findByCondition" resultMap="BaseResultMap">
+    SELECT * FROM company
+    <where>
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="status != null">AND status = #{status}</if>
+    </where>
+</select>
+
+
+5.6 实习管理模块核心代码
+
+// AdminController.java - 实习审批
+@PostMapping("/internship/approve/{id}")
+public String internshipApprove(@PathVariable Integer id) {
+    Internship internship = internshipService.findById(id);
+    if (internship != null) {
+        internship.setStatus(1);
+        internship.setUpdateTime(new Date());
+        internshipService.updateInternship(internship);
+    }
+    return "redirect:/admin/internships";
+}
+
+// InternshipMapper.xml - 多表关联查询
+<select id="findByCondition" resultMap="BaseResultMap">
+    SELECT i.*, s.name AS student_name,
+           c.name AS company_name, t.name AS teacher_name
+    FROM internship i
+    LEFT JOIN student s ON i.student_id = s.id
+    LEFT JOIN company c ON i.company_id = c.id
+    LEFT JOIN teacher t ON i.teacher_id = t.id
+    <where>
+        <if test="studentName != null and studentName != ''">
+            AND s.name LIKE CONCAT('%', #{studentName}, '%')
+        </if>
+        <if test="status != null">AND i.status = #{status}</if>
+    </where>
+</select>
+
+
+5.7 任务管理模块核心代码
+
+// TeacherController.java - 教师布置/编辑任务
+@PostMapping("/task/save")
+public String taskSave(@ModelAttribute InternshipTask task, HttpSession session) {
+    Teacher teacher = (Teacher) session.getAttribute("loginTeacher");
+    Internship internship = internshipService.findById(task.getInternshipId());
+    if (internship == null || !teacher.getId().equals(internship.getTeacherId()))
+        return "redirect:/teacher/tasks";
+    if (task.getId() == null) {
+        task.setStatus(0);
+        task.setCreateTime(new Date());
+        taskService.addTask(task);
+    } else {
+        task.setUpdateTime(new Date());
+        taskService.updateTask(task);
+    }
+    return "redirect:/teacher/tasks";
+}
+
+// StudentController.java - 学生更新任务状态
+@PostMapping("/task/updateStatus")
+@ResponseBody
+public Result taskUpdateStatus(@RequestParam Integer taskId,
+        @RequestParam Integer status, HttpSession session) {
+    Student student = (Student) session.getAttribute("loginStudent");
+    InternshipTask task = taskService.findById(taskId);
+    task.setStatus(status);
+    task.setUpdateTime(new Date());
+    return taskService.updateTask(task) ? Result.success() : Result.error("更新失败");
+}
+
+
+5.8 实习报告模块核心代码
+
+// StudentController.java - 报告提交（含文件上传）
+@PostMapping("/report/save")
+public String reportSave(@ModelAttribute InternshipReport report,
+        @RequestParam MultipartFile attachment, HttpSession session,
+        HttpServletRequest request) throws IOException {
+    Student student = (Student) session.getAttribute("loginStudent");
+    report.setStudentId(student.getId());
+    if (attachment != null && !attachment.isEmpty()) {
+        String uploadPath = request.getServletContext().getRealPath("/upload/");
+        String fileName = "report_" + System.currentTimeMillis() + suffix;
+        attachment.transferTo(new File(uploadPath, fileName));
+        report.setFilePath("/upload/" + fileName);
+    }
+    report.setStatus(0);
+    report.setSubmitTime(new Date());
+    reportService.addReport(report);
+    return "redirect:/student/reports";
+}
+
+// TeacherController.java - 教师审阅报告
+@PostMapping("/report/review")
+public String reportReview(@RequestParam Integer id,
+        @RequestParam Integer status, @RequestParam String feedback,
+        @RequestParam Integer score, HttpSession session) {
+    Teacher teacher = (Teacher) session.getAttribute("loginTeacher");
+    InternshipReport report = reportService.findById(id);
+    Internship internship = internshipService.findById(report.getInternshipId());
+    if (teacher.getId().equals(internship.getTeacherId())) {
+        reportService.reviewReport(id, status, feedback, score);
+    }
+    return "redirect:/teacher/reports";
+}
+
+
+5.9 实习日志模块核心代码
+
+// StudentController.java - 日志增删改
+@PostMapping("/log/save")
+public String logSave(@ModelAttribute InternshipLog log, HttpSession session) {
+    Student student = (Student) session.getAttribute("loginStudent");
+    log.setStudentId(student.getId());
+    if (log.getId() == null) {
+        log.setCreateTime(new Date());
+        logService.addLog(log);
+    } else {
+        InternshipLog existing = logService.findById(log.getId());
+        if (existing.getStudentId().equals(student.getId()))
+            logService.updateLog(log);
+    }
+    return "redirect:/student/logs";
+}
+
+
+5.10 公告管理模块核心代码
+
+// AdminController.java - 公告发布
+@PostMapping("/announcement/save")
+public String announcementSave(@ModelAttribute Announcement announcement,
+        HttpSession session) {
+    if (announcement.getId() == null) {
+        User user = (User) session.getAttribute("loginUser");
+        announcement.setPublisherId(user.getId());
+        announcement.setCreateTime(new Date());
+        announcementService.addAnnouncement(announcement);
+    } else {
+        announcement.setUpdateTime(new Date());
+        announcementService.updateAnnouncement(announcement);
+    }
+    return "redirect:/admin/announcements";
+}
+
+
+5.11 密码修改模块核心代码
+
+// PasswordController.java - 密码验证与更新
+@PostMapping("/password/update")
+@ResponseBody
+public Result updatePassword(@RequestParam String oldPassword,
+        @RequestParam String newPassword, HttpSession session) {
+    User loginUser = (User) session.getAttribute("loginUser");
+    if (loginUser == null) return Result.error("请先登录");
+    boolean success = userService.updatePassword(
+            loginUser.getId(), oldPassword, newPassword);
+    return success ? Result.success("密码修改成功") : Result.error("原密码错误");
+}
+
+// UserServiceImpl.java - MD5加密比对
+@Override
+public boolean updatePassword(Integer id, String oldPwd, String newPwd) {
+    User user = userMapper.findById(id);
+    if (!MD5Util.encrypt(oldPwd).equals(user.getPassword())) return false;
+    return userMapper.updatePassword(id, MD5Util.encrypt(newPwd)) > 0;
+}
+
+
+5.12 数据统计模块核心代码
+
+// AdminController.java - 统计数据接口
+@GetMapping("/statistics/data")
+@ResponseBody
+public String statisticsData() throws JsonProcessingException {
+    Map<String, Object> data = new HashMap<>();
+    Map<String, Integer> statusDist = new LinkedHashMap<>();
+    statusDist.put("待审核", internshipService.countByStatus(0));
+    statusDist.put("进行中", internshipService.countByStatus(1));
+    statusDist.put("已完成", internshipService.countByStatus(2));
+    data.put("internshipStatus", statusDist);
+    return new ObjectMapper().writeValueAsString(data);
+}
+
+
+5.13 Spring配置核心代码
+
+<!-- spring-context.xml - SSM框架整合配置 -->
+<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="${jdbc.driver}"/>
+    <property name="url" value="${jdbc.url}"/>
+    <property name="username" value="${jdbc.username}"/>
+    <property name="password" value="${jdbc.password}"/>
+</bean>
+
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <property name="configLocation" value="classpath:mybatis-config.xml"/>
+    <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+    <property name="typeAliasesPackage" value="com.internship.entity"/>
+</bean>
+
+<bean id="transactionManager"
+      class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"/>
+</bean>
+<tx:annotation-driven transaction-manager="transactionManager"/>
+
+
+5.14 MyBatis数据映射核心代码
+
+<!-- UserMapper.xml - 用户数据持久化 -->
+<insert id="insert" useGeneratedKeys="true" keyProperty="id">
+    INSERT INTO sys_user (username, password, real_name, role, phone,
+        email, status, create_time, update_time)
+    VALUES (#{username}, #{password}, #{realName}, #{role}, #{phone},
+        #{email}, #{status}, #{createTime}, #{updateTime})
+</insert>
+
+<update id="update">
+    UPDATE sys_user
+    <set>
+        <if test="username != null">username = #{username},</if>
+        <if test="realName != null">real_name = #{realName},</if>
+        <if test="status != null">status = #{status},</if>
+    </set>
+    WHERE id = #{id}
+</update>
